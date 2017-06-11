@@ -3,8 +3,12 @@ using System.Threading.Tasks;
 
 namespace Plugin.Nfc.Abstractions
 {
+    public delegate void TagDetectedDelegate(INfcDefTag tag);
+
     public interface INfc
     {
+        event TagDetectedDelegate TagDetected;
+        
         /// <summary>
         /// Checks if <see cref="GetAvailabilityAsync"/> returns <see cref="FingerprintAvailability.Available"/>.
         /// </summary>
@@ -15,8 +19,19 @@ namespace Plugin.Nfc.Abstractions
         /// </param>
         /// <returns><c>true</c> if Available, else <c>false</c></returns>
         Task<bool> IsAvailableAsync();
+        Task<bool> IsEnabledAsync();
 
 
+        Task StartListeningAsync();
+        Task StopListeningAsync();
+
+        
+    }
+
+    public interface INfcDefTag
+    {
+        bool IsWriteable { get; }
+        NfcDefRecord[] Records { get; }
     }
 
 
@@ -31,13 +46,14 @@ namespace Plugin.Nfc.Abstractions
         Unknown
     }
 
-    public class NDefMessage
-    {
-        public NDefRecord[] Records { get; set; }
-    }
+    //public class NDefMessage
+    //{
+    //    public NDefRecord[] Records { get; set; }
+    //}
 
-    public class NDefRecord
+    public class NfcDefRecord
     {
         public NDefTypeNameFormat TypeNameFormat { get; set; }
+        public byte[] Payload { get; set; }
     }
 }

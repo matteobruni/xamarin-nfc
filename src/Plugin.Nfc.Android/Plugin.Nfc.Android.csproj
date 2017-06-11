@@ -52,6 +52,7 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="CrossNfc.Android.cs" />
     <None Include="Resources\AboutResources.txt" />
   </ItemGroup>
   <ItemGroup>
