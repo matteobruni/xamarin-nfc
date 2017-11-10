@@ -8,7 +8,8 @@ namespace Plugin.Nfc.Abstractions
     public interface INfc
     {
         event TagDetectedDelegate TagDetected;
-        
+        event TagDetectedDelegate TagWritten;
+
         /// <summary>
         /// Checks if <see cref="GetAvailabilityAsync"/> returns <see cref="FingerprintAvailability.Available"/>.
         /// </summary>
@@ -25,13 +26,16 @@ namespace Plugin.Nfc.Abstractions
         Task StartListeningAsync();
         Task StopListeningAsync();
 
-        
+        Task WriteTagAsync(byte[] tagId, NfcDefRecord[] recordcs);
+        Task WriteTagAsync(NfcDefRecord[] recordcs);
     }
 
     public interface INfcDefTag
     {
         bool IsWriteable { get; }
         NfcDefRecord[] Records { get; }
+
+        byte[] TagID { get; }
     }
 
 

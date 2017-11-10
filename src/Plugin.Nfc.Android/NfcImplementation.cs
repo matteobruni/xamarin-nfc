@@ -16,9 +16,11 @@ namespace Plugin.Nfc
 {
     internal class NfcImplementation : Java.Lang.Object, INfc, NfcAdapter.IReaderCallback
     {
+        private readonly List<NdefMessageWrite> _writeQueue = new List<NdefMessageWrite>();
         private readonly NfcAdapter _nfcAdapter;
 
         public event TagDetectedDelegate TagDetected;
+        public event TagDetectedDelegate TagWritten;
 
         public NfcImplementation()
         {
@@ -69,6 +71,32 @@ namespace Plugin.Nfc
             _nfcAdapter?.DisableForegroundDispatch(CrossNfc.CurrentActivity);
         }
 
+        public Task WriteTagAsync(byte[] tagId, NfcDefRecord[] recordcs)
+        {
+            var oldItem = _writeQueue.FirstOrDefault(a => a.TagID.SequenceEqual(tagId));
+            if (oldItem != null)
+            {
+                _writeQueue.Remove(oldItem);
+            }
+
+            var writeItem = new NdefMessageWrite() {TagID = tagId, Records = recordcs};
+            _writeQueue.Add(writeItem);
+            return writeItem.CompleteTask;
+        }
+
+        public Task WriteTagAsync(NfcDefRecord[] recordcs)
+        {
+            var oldItem = _writeQueue.FirstOrDefault(a => a.TagID == null);
+            if (oldItem != null)
+            {
+                _writeQueue.Remove(oldItem);
+            }
+
+            var writeItem = new NdefMessageWrite() { TagID = null, Records = recordcs };
+            _writeQueue.Add(writeItem);
+            return writeItem.CompleteTask;
+        }
+
         internal void CheckForNfcMessage(Intent intent)
         {
             //if (intent.Action != NfcAdapter.ActionTagDiscovered)
@@ -96,13 +124,35 @@ namespace Plugin.Nfc
                     return;
 
                 var ndef = Ndef.Get(tag);
-                ndef.Connect();
-                var ndefMessage = ndef.NdefMessage;
-                var records = ndefMessage.GetRecords();
-                ndef.Close();
 
-                var nfcTag = new NfcDefTag(ndef, records);
-                TagDetected?.Invoke(nfcTag);
+                var writeItem = _writeQueue.FirstOrDefault(a => a.TagID.SequenceEqual(ndef.Tag.GetId())) ??
+                                _writeQueue.FirstOrDefault(a => a.TagID == null);
+
+                if (writeItem != null)
+                {
+                    ndef.Connect();
+                    //TODO: there are some aguments for the ndefrecord missing
+                    ndef.WriteNdefMessage(new NdefMessage(writeItem.Records.Select(a => new NdefRecord(a.Payload)).ToArray()));
+
+                    var ndefMessage = ndef.NdefMessage;
+                    var records = ndefMessage.GetRecords();
+                    ndef.Close();
+                    _writeQueue.Remove(writeItem);
+
+                    var nfcTag = new NfcDefTag(ndef, records) {TagID = tag.GetId()};
+                    TagWritten?.Invoke(nfcTag);
+                }
+
+                else
+                {
+                    ndef.Connect();
+                    var ndefMessage = ndef.NdefMessage;
+                    var records = ndefMessage.GetRecords();
+                    ndef.Close();
+                    var nfcTag = new NfcDefTag(ndef, records);
+                    nfcTag.TagID = tag.GetId();
+                    TagDetected?.Invoke(nfcTag);
+                }
             }
             catch
             {
@@ -113,16 +163,32 @@ namespace Plugin.Nfc
 
     public class NfcDefTag : INfcDefTag
     {
+        public Ndef Tag { get; }
         public bool IsWriteable { get; }
         public NfcDefRecord[] Records { get; }
+        public byte[] TagID { get; set; }
 
         public NfcDefTag(Ndef tag, IEnumerable<NdefRecord> records)
         {
+            Tag = tag;
             IsWriteable = tag.IsWritable;
             Records = records
                 .Select(r => new AndroidNdefRecord(r))
                 .ToArray();
         }
+    }
+
+    class NdefMessageWrite
+    {
+        private TaskCompletionSource<bool> _tsc;
+
+        public NdefMessageWrite()
+        {
+            _tsc = new TaskCompletionSource<bool>();
+        }
+        public byte[] TagID { get; set; }
+        public NfcDefRecord[] Records { get; set; }
+        public Task CompleteTask {get { return _tsc.Task; } }
     }
 
     public class AndroidNdefRecord : NfcDefRecord
