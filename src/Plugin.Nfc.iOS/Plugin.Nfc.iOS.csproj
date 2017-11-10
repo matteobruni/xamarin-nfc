@@ -40,7 +40,17 @@
     <Folder Include="Resources\" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="..\Plugin.Nfc\CrossNfc.cs">
+      <Link>CrossNfc.cs</Link>
+    </Compile>
+    <Compile Include="NfcImplementation.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Plugin.Nfc.Abstractions\Plugin.Nfc.Abstractions.csproj">
+      <Project>{3d8b731c-fe80-4836-ba3a-15eaeedaf2c6}</Project>
+      <Name>Plugin.Nfc.Abstractions</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
 </Project>

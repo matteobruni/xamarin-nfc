@@ -8,5 +8,8 @@
            FontSize="32"
            VerticalOptions="Center" 
            HorizontalOptions="Center" />
+    
+    <Button Text="Start Scan" 
+            Clicked="Button_OnClicked"/>
 
 </ContentPage>

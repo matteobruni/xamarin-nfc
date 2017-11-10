@@ -40,5 +40,10 @@ namespace Nfc.Sample
             base.OnDisappearing();
             await CrossNfc.Current.StopListeningAsync();
         }
+
+        private void Button_OnClicked(object sender, EventArgs e)
+        {
+            CrossNfc.Current.StartListeningAsync();
+        }
     }
 }

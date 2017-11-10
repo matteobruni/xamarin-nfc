@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-
+using CoreNFC;
 using Foundation;
 using UIKit;
-
+    // https://github.com/artemnovichkov/iOS-11-by-Examples/blob/master/iOS-11-by-Examples/CoreNFC/CoreNFCViewController.swift
 namespace Nfc.Sample.iOS
 {
     // The UIApplicationDelegate for the application. This class is responsible for launching the 
