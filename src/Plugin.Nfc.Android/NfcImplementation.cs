@@ -26,9 +26,6 @@ namespace Plugin.Nfc
 				return;
 			}
 
-			//if (Build.VERSION.SdkInt < BuildVersionCodes.Gingerbread)
-			//    return;
-
 			_nfcAdapter = NfcAdapter.GetDefaultAdapter(CrossNfc.CurrentActivity);
 		}
 
