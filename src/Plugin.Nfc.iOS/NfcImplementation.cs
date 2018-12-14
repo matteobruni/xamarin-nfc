@@ -25,8 +25,6 @@ namespace Plugin.Nfc
 
         public async Task StartListeningAsync()
         {
-            //_session = new NFCNdefReaderSession(this, DispatchQueue.CurrentQueue, true);
-            //_session.BeginSession();
             var reader = new NfcReader();
             var message = await reader.ScanAsync();
 
@@ -39,7 +37,6 @@ namespace Plugin.Nfc
 
         public void DidInvalidate(NFCNdefReaderSession session, NSError error)
         {
-            //throw new NotImplementedException();
         }
 
         public void DidDetect(NFCNdefReaderSession session, NFCNdefMessage[] messages)

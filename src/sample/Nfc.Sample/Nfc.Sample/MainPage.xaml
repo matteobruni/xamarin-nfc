@@ -1,15 +1,21 @@
 ﻿<?xml version="1.0" encoding="utf-8" ?>
-<ContentPage xmlns="http://xamarin.com/schemas/2014/forms"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:local="clr-namespace:Nfc.Sample"
-             x:Class="Nfc.Sample.MainPage">
+<ContentPage
+    x:Class="Nfc.Sample.MainPage"
+    xmlns="http://xamarin.com/schemas/2014/forms"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:local="clr-namespace:Nfc.Sample">
 
-	<Label x:Name="lblStatus"
-           FontSize="32"
-           VerticalOptions="Center" 
-           HorizontalOptions="Center" />
-    
-    <Button Text="Start Scan" 
-            Clicked="Button_OnClicked"/>
+    <StackLayout>
+        <Label
+            x:Name="lblStatus"
+            FontSize="32"
+            HorizontalOptions="Center"
+            VerticalOptions="Center" />
+
+        <Button
+            x:Name="StartButton"
+            Clicked="Button_OnClicked"
+            Text="Start Scan" />
+    </StackLayout>
 
 </ContentPage>

@@ -60,32 +60,32 @@ namespace Plugin.Nfc
             var intent = new Intent(activity, activity.GetType()).AddFlags(ActivityFlags.SingleTop);
             var pendingIntent = PendingIntent.GetActivity(activity, 0, intent, 0);
             _nfcAdapter.EnableForegroundDispatch(activity, pendingIntent, filters, new[] { new[] { Java.Lang.Class.FromType(typeof(Ndef)).Name } });
-            //_nfcAdapter.EnableReaderMode(activity, this, NfcReaderFlags.NfcA | NfcReaderFlags.NoPlatformSounds, null);
-        }
+			_nfcAdapter.EnableReaderMode(activity, this, NfcReaderFlags.NfcA | NfcReaderFlags.NoPlatformSounds, null);
+		}
 
         public async Task StopListeningAsync()
         {
-            //_nfcAdapter?.DisableReaderMode(CrossNfc.CurrentActivity);
-            _nfcAdapter?.DisableForegroundDispatch(CrossNfc.CurrentActivity);
+			_nfcAdapter?.DisableReaderMode(CrossNfc.CurrentActivity);
+			_nfcAdapter?.DisableForegroundDispatch(CrossNfc.CurrentActivity);
         }
 
         internal void CheckForNfcMessage(Intent intent)
         {
-            //if (intent.Action != NfcAdapter.ActionTagDiscovered)
-            //    return;
+			if (intent.Action != NfcAdapter.ActionTagDiscovered)
+				return;
 
-            //var tag = intent.GetParcelableExtra(NfcAdapter.ExtraTag) as Tag;
-            //if (tag == null)
-            //    return;
+			var tag = intent.GetParcelableExtra(NfcAdapter.ExtraTag) as Tag;
+			if (tag == null)
+				return;
 
-            //var nativeMessages = intent.GetParcelableArrayExtra(NfcAdapter.ExtraNdefMessages);
-            //if (nativeMessages == null)
-            //    return;
+			var nativeMessages = intent.GetParcelableArrayExtra(NfcAdapter.ExtraNdefMessages);
+			if (nativeMessages == null)
+				return;
 
-            //var messages = nativeMessages
-            //    .Cast<NdefMessage>()
-            //    .Select(m => new AndroidNdefMessage(m));
-        }
+			//var messages = nativeMessages
+			//	.Cast<NdefMessage>()
+			//	.Select(m => new AndroidNdefMessage(m));
+		}
 
         public void OnTagDiscovered(Tag tag)
         {
