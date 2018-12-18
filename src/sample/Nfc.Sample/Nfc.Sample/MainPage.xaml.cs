@@ -11,6 +11,12 @@ namespace Nfc.Sample
 		public MainPage()
 		{
 			InitializeComponent();
+
+			if (Device.RuntimePlatform == Device.iOS)
+			{
+				NavigationPage.SetHasNavigationBar(this, true);
+			}
+			NavigationPage.SetBackButtonTitle(this, string.Empty);
 		}
 
 		private bool _isStarted;
@@ -41,9 +47,16 @@ namespace Nfc.Sample
 		{
 			var tagText = string.Join(", ", tag.Records.Select(t => Encoding.UTF8.GetString(t.Payload, 0, t.Payload.Length)));
 
-			Device.BeginInvokeOnMainThread(() =>
+			Device.BeginInvokeOnMainThread(async () =>
 			{
 				lblStatus.Text = tagText;
+
+				if (Device.RuntimePlatform == Device.iOS)
+				{
+					await CrossNfc.Current.StopListeningAsync();
+					_isStarted = false;
+					StartButton.Text = "Start Scan";
+				}
 			});
 		}
 
@@ -58,17 +71,24 @@ namespace Nfc.Sample
 
 		private async void Button_OnClicked(object sender, EventArgs e)
 		{
-			if (!_isStarted)
+			try
 			{
-				await CrossNfc.Current.StartListeningAsync();
-				_isStarted = true;
-				StartButton.Text = "Stop Scan";
+				if (!_isStarted)
+				{
+					await CrossNfc.Current.StartListeningAsync();
+					_isStarted = true;
+					StartButton.Text = "Stop Scan";
+				}
+				else
+				{
+					await CrossNfc.Current.StopListeningAsync();
+					_isStarted = false;
+					StartButton.Text = "Start Scan";
+				}
 			}
-			else
+			catch (Exception ex)
 			{
-				await CrossNfc.Current.StopListeningAsync();
-				_isStarted = false;
-				StartButton.Text = "Start Scan";
+				lblStatus.Text = ex.Message;
 			}
 		}
 	}

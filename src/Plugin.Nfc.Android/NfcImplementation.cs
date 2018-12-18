@@ -29,15 +29,21 @@ namespace Plugin.Nfc
 			_nfcAdapter = NfcAdapter.GetDefaultAdapter(CrossNfc.CurrentActivity);
 		}
 
-		public async Task<bool> IsAvailableAsync()
+		public Task<bool> IsAvailableAsync()
 		{
 			var context = Application.Context;
+			var result = false;
+
 			if (context.CheckCallingOrSelfPermission(Manifest.Permission.Nfc) != Permission.Granted)
 			{
-				return false;
+				result = false;
+			}
+			else
+			{
+				result = _nfcAdapter != null;
 			}
 
-			return _nfcAdapter != null;
+			return Task.FromResult(result);
 		}
 
 		public Task<bool> IsEnabledAsync() => Task.FromResult(_nfcAdapter?.IsEnabled ?? false);
@@ -56,19 +62,22 @@ namespace Plugin.Nfc
 
 			var activity = CrossNfc.CurrentActivity;
 			var tagDetected = new IntentFilter(NfcAdapter.ActionNdefDiscovered);
+
 			tagDetected.AddDataType("*/*");
+
 			var filters = new[] { tagDetected };
 			var intent = new Intent(activity, activity.GetType()).AddFlags(ActivityFlags.SingleTop);
 			var pendingIntent = PendingIntent.GetActivity(activity, 0, intent, 0);
+
 			_nfcAdapter.EnableForegroundDispatch(activity, pendingIntent, filters, new[] { new[] { Java.Lang.Class.FromType(typeof(Ndef)).Name } });
 			_nfcAdapter.EnableReaderMode(activity, this, NfcReaderFlags.NfcA | NfcReaderFlags.NoPlatformSounds, null);
 		}
 
-		public async Task StopListeningAsync()
+		public Task StopListeningAsync() => Task.Run(() =>
 		{
 			_nfcAdapter?.DisableReaderMode(CrossNfc.CurrentActivity);
 			_nfcAdapter?.DisableForegroundDispatch(CrossNfc.CurrentActivity);
-		}
+		});
 
 		internal void CheckForNfcMessage(Intent intent)
 		{
@@ -77,8 +86,7 @@ namespace Plugin.Nfc
 				return;
 			}
 
-			var tag = intent.GetParcelableExtra(NfcAdapter.ExtraTag) as Tag;
-			if (tag == null)
+			if (!(intent.GetParcelableExtra(NfcAdapter.ExtraTag) is Tag tag))
 			{
 				return;
 			}
@@ -90,10 +98,6 @@ namespace Plugin.Nfc
 			}
 
 			OnTagDiscovered(tag);
-
-			//var messages = nativeMessages
-			//	.Cast<NdefMessage>()
-			//	.Select(m => new AndroidNdefMessage(m));
 		}
 
 		public void OnTagDiscovered(Tag tag)
@@ -101,18 +105,23 @@ namespace Plugin.Nfc
 			try
 			{
 				var techs = tag.GetTechList();
+
 				if (!techs.Contains(Java.Lang.Class.FromType(typeof(Ndef)).Name))
 				{
 					return;
 				}
 
 				var ndef = Ndef.Get(tag);
+
 				ndef.Connect();
+
 				var ndefMessage = ndef.NdefMessage;
 				var records = ndefMessage.GetRecords();
+
 				ndef.Close();
 
 				var nfcTag = new NfcDefTag(ndef, records);
+
 				TagDetected?.Invoke(nfcTag);
 			}
 			catch (Exception ex)
@@ -130,9 +139,7 @@ namespace Plugin.Nfc
 		public NfcDefTag(Ndef tag, IEnumerable<NdefRecord> records)
 		{
 			IsWriteable = tag.IsWritable;
-			Records = records
-				.Select(r => new AndroidNdefRecord(r))
-				.ToArray();
+			Records = records.Select(r => new AndroidNdefRecord(r)).ToArray();
 		}
 	}
 
@@ -159,7 +166,7 @@ namespace Plugin.Nfc
 				case NdefRecord.TnfUnchanged:
 					return NDefTypeNameFormat.Unchanged;
 				case NdefRecord.TnfUnknown:
-					return NDefTypeNameFormat.Unchanged;
+					return NDefTypeNameFormat.Unknown;
 				case NdefRecord.TnfWellKnown:
 					return NDefTypeNameFormat.WellKnown;
 			}
